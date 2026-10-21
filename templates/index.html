@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab Report Generator – MVC Parel</title>
+<style>
+  :root{--bg:#f4f6f9;--card:#fff;--ink:#1c2430;--mute:#667085;--line:#dde2ea;--brand:#1f5fa8;--brand-d:#174a85;--bad:#c0392b;--ok:#1d7a46}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:#fff;border-bottom:1px solid var(--line);padding:14px 20px}
+  header h1{margin:0;font-size:18px} header p{margin:2px 0 0;color:var(--mute);font-size:13px}
+  main{max-width:960px;margin:20px auto;padding:0 16px 60px;display:grid;gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .card h2{margin:0 0 12px;font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
+  .types{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .type{border:2px solid var(--line);border-radius:10px;padding:14px;cursor:pointer;background:#fff;text-align:left;font:inherit;color:inherit}
+  .type b{display:block;font-size:17px} .type span{color:var(--mute);font-size:13px}
+  .type.on{border-color:var(--brand);background:#eef5fd}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+  label{display:block;font-size:12.5px;color:var(--mute);margin-bottom:4px}
+  input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+  input:focus,select:focus{outline:2px solid #9cc3ee;border-color:var(--brand)}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+  td{padding:5px 8px;vertical-align:middle}
+  tr.sec td{padding-top:16px;font-weight:700;font-size:13px;color:var(--brand)}
+  tr.gap td{padding:2px}
+  td.name{width:34%} td.unit{width:16%;color:var(--mute)} td.val{width:22%} td.rng{width:20%}
+  td.flag{width:8%;font-weight:700;font-size:12px}
+  td.rng input{color:var(--mute)}
+  input.abn{color:var(--bad);font-weight:700;border-color:#e6a49b;background:#fff6f5}
+  .tag-low,.tag-high{color:var(--bad)}
+  .out{display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:end}
+  .opts{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}
+  .opts label{display:flex;gap:6px;align-items:center;color:var(--ink);font-size:14px;margin:0}
+  .opts input{width:auto}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  button.act{padding:11px 18px;border-radius:8px;border:1px solid var(--brand);font:inherit;font-weight:600;cursor:pointer}
+  .primary{background:var(--brand);color:#fff} .primary:hover{background:var(--brand-d)}
+  .ghost{background:#fff;color:var(--brand)} .ghost:hover{background:#eef5fd}
+  .plain{background:#fff;color:var(--mute);border-color:var(--line)}
+  button:disabled{opacity:.6;cursor:wait}
+  .hint{font-size:12.5px;color:var(--mute);margin-top:8px}
+  #modal{position:fixed;inset:0;background:rgba(15,23,42,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+  #modal.show{display:flex}
+  #modal .box{background:#fff;border-radius:12px;width:min(900px,100%);height:92vh;display:flex;flex-direction:column;overflow:hidden}
+  #modal .bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);gap:8px}
+  #modal iframe{flex:1;border:0;width:100%}
+  .err{color:var(--bad);font-size:13px;margin-top:8px;min-height:1em}
+  @media(max-width:620px){.out{grid-template-columns:1fr}.types{grid-template-columns:1fr}
+    td.unit{display:none} th.unit{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Lab Report Generator</h1>
+  <p>Department of Veterinary Physiology · Mumbai Veterinary College, Parel</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2>1 · Report type</h2>
+    <div class="types" id="types"></div>
+  </section>
+
+  <section class="card">
+    <h2>2 · Patient details</h2>
+    <div class="grid">
+      <div><label>Owner’s Name</label><input id="owner"></div>
+      <div><label>Patient’s Name</label><input id="patient"></div>
+      <div><label>Age (e.g. 3 months)</label><input id="age"></div>
+      <div><label>Sex</label>
+        <select id="sex"><option value="">–</option><option>male</option><option>female</option></select></div>
+      <div><label>Species/Breed</label><input id="species" value="Canine"></div>
+      <div><label>Ref</label><input id="ref" value="TVCC, Goregaon"></div>
+      <div><label>Ref. No.</label><input id="ref_no"></div>
+      <div><label>Collected</label><input type="date" id="collected"></div>
+      <div><label>Received</label><input type="date" id="received"></div>
+      <div><label>Reported</label><input type="date" id="reported"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>3 · <span id="rtitle">Results</span></h2>
+    <table>
+      <thead><tr><th>Test</th><th>Result</th><th class="unit">Units</th><th>Normal range</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="hint">Values outside the normal range are shown in bold in the PDF (you can switch this off below). Normal ranges can be edited, e.g. for cats or puppies.</div>
+  </section>
+
+  <section class="card">
+    <h2>4 · Download</h2>
+    <div class="out">
+      <div><label>File name</label><input id="filename" placeholder="e.g. Tiger_CBC_10-07-2026"></div>
+      <div class="hint" style="margin:0 0 10px">“.pdf” is added automatically.</div>
+    </div>
+    <div class="opts">
+      <label><input type="checkbox" id="flag" checked> Bold values outside normal range</label>
+      <label><input type="checkbox" id="signature" checked> Include signature</label>
+    </div>
+    <div class="btns">
+      <button class="act primary" id="btnDownload">⬇ Download PDF</button>
+      <button class="act ghost" id="btnPreview">👁 Preview</button>
+      <button class="act plain" id="btnClear">Clear results</button>
+    </div>
+    <div class="err" id="err"></div>
+  </section>
+</main>
+
+<div id="modal">
+  <div class="box">
+    <div class="bar"><b>Preview</b>
+      <span><button class="act primary" id="mDownload">⬇ Download PDF</button>
+      <button class="act plain" id="mClose">Close</button></span></div>
+    <iframe id="frame"></iframe>
+  </div>
+</div>
+
+<script>
+const DEFS = {{ defs|tojson }};
+let current = Object.keys(DEFS)[0];
+const $ = id => document.getElementById(id);
+
+// ---- dates default to today
+const today = new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+["collected","received","reported"].forEach(i => $(i).value = today);
+
+// ---- range check (same logic as server)
+function abnormal(val, rng){
+  const v = parseFloat(String(val).replace(",", "."));
+  if (isNaN(v) || String(val).trim()==="") return 0;
+  const m = String(rng).match(/^\s*(-?\d+(?:\.\d+)?)\s*[-–—]\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if (!m) return 0;
+  return v < parseFloat(m[1]) ? -1 : v > parseFloat(m[2]) ? 1 : 0;
+}
+
+// ---- report type buttons
+function renderTypes(){
+  $("types").innerHTML = "";
+  for (const [k, d] of Object.entries(DEFS)){
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "type" + (k===current ? " on" : "");
+    b.innerHTML = `<b>${d.label}</b><span>${d.subtitle}</span>`;
+    b.onclick = () => { current = k; renderTypes(); renderRows(); updateName(); };
+    $("types").appendChild(b);
+  }
+}
+
+// ---- result rows
+function renderRows(){
+  const d = DEFS[current];
+  $("rtitle").textContent = d.label + " results";
+  const tb = $("rows"); tb.innerHTML = "";
+  for (const r of d.rows){
+    const tr = document.createElement("tr");
+    if (r.type === "section"){ tr.className = "sec"; tr.innerHTML = `<td colspan="5">${r.title}</td>`; }
+    else if (r.type === "gap"){ tr.className = "gap"; tr.innerHTML = `<td colspan="5"></td>`; }
+    else {
+      tr.innerHTML = `<td class="name">${r.name}</td>
+        <td class="val"><input data-id="${r.id}" class="v" inputmode="decimal" autocomplete="off"></td>
+        <td class="unit">${r.unit_html}</td>
+        <td class="rng"><input data-rid="${r.id}" class="r" value="${r.range}"></td>
+        <td class="flag" id="f_${r.id}"></td>`;
+    }
+    tb.appendChild(tr);
+  }
+  tb.querySelectorAll("input").forEach(i => i.addEventListener("input", refreshFlags));
+  // Enter moves to next result box
+  tb.querySelectorAll("input.v").forEach((el, idx, all) => el.addEventListener("keydown", e => {
+    if (e.key === "Enter"){ e.preventDefault(); (all[idx+1] || $("filename")).focus(); }
+  }));
+}
+function refreshFlags(){
+  document.querySelectorAll("input.v").forEach(v => {
+    const id = v.dataset.id, rng = document.querySelector(`input[data-rid="${id}"]`).value;
+    const a = abnormal(v.value, rng);
+    v.classList.toggle("abn", a !== 0);
+    const f = $("f_"+id);
+    f.textContent = a > 0 ? "▲ High" : a < 0 ? "▼ Low" : "";
+    f.className = "flag " + (a > 0 ? "tag-high" : a < 0 ? "tag-low" : "");
+  });
+}
+
+// ---- file name suggestion (until the user types their own)
+let nameTouched = false;
+$("filename").addEventListener("input", () => nameTouched = true);
+function updateName(){
+  if (nameTouched) return;
+  const p = ($("patient").value || "Patient").trim().replace(/\s+/g, "_");
+  const dt = ($("reported").value || today).split("-").reverse().join("-");
+  $("filename").value = `${p}_${DEFS[current].label}_${dt}`;
+}
+["patient","reported"].forEach(i => $(i).addEventListener("input", updateName));
+
+// ---- build payload + call server
+function payload(){
+  const results = {};
+  document.querySelectorAll("input.v").forEach(v => {
+    const id = v.dataset.id;
+    results[id] = { value: v.value.trim(), range: document.querySelector(`input[data-rid="${id}"]`).value.trim() };
+  });
+  const patient = {};
+  ["owner","patient","age","sex","species","ref","ref_no","collected","received","reported"]
+    .forEach(k => patient[k] = $(k).value.trim());
+  return { report: current, patient, results, filename: $("filename").value,
+           flag: $("flag").checked, signature: $("signature").checked };
+}
+function fileName(){
+  const n = $("filename").value.trim().replace(/\.pdf$/i, "").replace(/[^\w\s().-]/g, "").replace(/\s+/g, "_");
+  return (n || current + "_report") + ".pdf";
+}
+async function fetchPdf(download){
+  $("err").textContent = "";
+  const res = await fetch("/api/pdf" + (download ? "?download=1" : ""), {
+    method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload())
+  });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Could not create the PDF");
+  return await res.blob();
+}
+function saveBlob(blob){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = fileName();
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+async function guard(btn, fn){
+  btn.disabled = true;
+  try { await fn(); } catch(e){ $("err").textContent = e.message; } finally { btn.disabled = false; }
+}
+let lastBlob = null;
+$("btnDownload").onclick = e => guard(e.target, async () => saveBlob(await fetchPdf(true)));
+$("btnPreview").onclick = e => guard(e.target, async () => {
+  lastBlob = await fetchPdf(false);
+  $("frame").src = URL.createObjectURL(lastBlob);
+  $("modal").classList.add("show");
+});
+$("mDownload").onclick = () => lastBlob && saveBlob(lastBlob);
+$("mClose").onclick = () => $("modal").classList.remove("show");
+$("modal").onclick = e => { if (e.target.id === "modal") $("modal").classList.remove("show"); };
+$("btnClear").onclick = () => { document.querySelectorAll("input.v").forEach(v => v.value = ""); refreshFlags(); };
+
+renderTypes(); renderRows(); updateName();
+</script>
+</body>
+</html>
